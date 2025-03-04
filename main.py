@@ -1,7 +1,8 @@
 import click
-from cycling_agent.models import UserProfile
 from pydantic import ValidationError
+from cycling_agent.models import UserProfile
 from cycling_agent.state_manager import load_user_data, save_user_data
+from cycling_agent.strava import authenticate, fetch_metrics
 
 def prompt_for_profile():
     """Prompt user for profile data and return a UserProfile."""
@@ -18,7 +19,7 @@ def prompt_for_profile():
 
 @click.command()
 def create_profile():
-    """Create or load a user profile for the Cycling Agent."""
+    """Create or load a user profile for the Cycling Agent and fetch Strava data."""
     # Try to load existing user data
     user_profile = load_user_data()
 
@@ -34,11 +35,17 @@ def create_profile():
         
         # Save the new profile
         save_user_data(user_profile)
-        
-        # Confirm save and display profile
         click.echo("Profile created and saved successfully!")
         click.echo(f"Experience Level: {user_profile.experience_level}")
         click.echo(f"Goals: {user_profile.goals}")
+
+    # Strava integration stubs
+    authenticate()
+    metrics = fetch_metrics()
+    click.echo("Strava Metrics:")
+    click.echo(f"Distance: {metrics['distance']} km")
+    click.echo(f"Heart Rate: {metrics['heart_rate']} bpm")
+    click.echo(f"Power: {metrics['power']} watts")
 
 if __name__ == '__main__':
     create_profile()
