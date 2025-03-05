@@ -10,7 +10,7 @@ def save_user_data(user_profile: UserProfile) -> None:
     """Save the user profile to a JSON file."""
     try:
         with STATE_FILE.open("w") as f:
-            json.dump(user_profile.dict(), f, indent=4)
+            json.dump(user_profile.model_dump(), f, indent=4)  # Changed from dict() to model_dump()
         logger.info("User profile saved successfully.")
     except Exception as e:
         handle_error(e)
