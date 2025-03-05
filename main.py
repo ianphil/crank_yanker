@@ -3,6 +3,7 @@ from pydantic import ValidationError
 from cycling_agent.models import UserProfile
 from cycling_agent.state_manager import load_user_data, save_user_data
 from cycling_agent.strava import authenticate, fetch_metrics
+from cycling_agent.workout_generator import calculate_power_zones, generate_weekly_plan
 
 def prompt_for_profile():
     """Prompt user for profile data and return a UserProfile."""
@@ -19,21 +20,17 @@ def prompt_for_profile():
 
 @click.command()
 def create_profile():
-    """Create or load a user profile for the Cycling Agent and fetch Strava data."""
+    """Create or load a user profile, fetch Strava data, and generate a workout plan."""
     # Try to load existing user data
     user_profile = load_user_data()
 
     if user_profile:
-        # Greet user with existing data
         click.echo(f"Welcome back!")
         click.echo(f"Experience Level: {user_profile.experience_level}")
         click.echo(f"Goals: {user_profile.goals}")
     else:
-        # No data exists, prompt for new profile
         click.echo("No existing profile found. Let's create one.")
         user_profile = prompt_for_profile()
-        
-        # Save the new profile
         save_user_data(user_profile)
         click.echo("Profile created and saved successfully!")
         click.echo(f"Experience Level: {user_profile.experience_level}")
@@ -46,6 +43,21 @@ def create_profile():
     click.echo(f"Distance: {metrics['distance']} km")
     click.echo(f"Heart Rate: {metrics['heart_rate']} bpm")
     click.echo(f"Power: {metrics['power']} watts")
+
+    # Prompt for FTP and generate workout plan
+    ftp = click.prompt("Enter your FTP (Functional Threshold Power) in watts", type=int)
+    zones = calculate_power_zones(ftp)
+    weekly_plan = generate_weekly_plan(user_profile, zones)
+
+    # Display power zones
+    click.echo("\nYour Power Zones:")
+    for zone, (low, high) in zones.items():
+        click.echo(f"{zone}: {low}-{high} watts")
+
+    # Display weekly plan
+    click.echo("\nYour Weekly Training Plan:")
+    for session in weekly_plan:
+        click.echo(f"{session['day_of_week']}: {session['duration']} at {session['intensity']} - {session['description']}")
 
 if __name__ == '__main__':
     create_profile()
