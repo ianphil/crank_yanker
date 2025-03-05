@@ -11,11 +11,11 @@ def calculate_power_zones(ftp: int) -> Dict[str, tuple]:
         "Z5": (int(ftp * 1.06), int(ftp * 1.20))   # VO2 Max: 106-120% FTP
     }
 
-def generate_weekly_plan(user_profile: UserProfile, zones: Dict[str, tuple]) -> List[dict]:
-    """Generate a basic weekly training plan based on user profile and power zones."""
+def generate_weekly_plan(user_profile: UserProfile, zones: Dict[str, tuple], metrics: dict) -> List[dict]:
+    """Generate a weekly training plan based on user profile, zones, and Strava metrics."""
     plan = []
-
-    # Simple logic based on experience level and goals
+    
+    # Base plan based on experience level
     if user_profile.experience_level.lower() == "beginner":
         plan.extend([
             {"day_of_week": "Monday", "duration": "1h", "intensity": "Z1", "description": "Easy recovery ride"},
@@ -38,8 +38,20 @@ def generate_weekly_plan(user_profile: UserProfile, zones: Dict[str, tuple]) -> 
             {"day_of_week": "Sunday", "duration": "3h", "intensity": "Z2", "description": "Long endurance ride"},
         ])
 
-    # Adjust based on goals (simplified for now)
+    # Adjust plan based on Strava metrics
+    if metrics["distance"] < 20:  # Recent ride was short
+        plan.append({"day_of_week": "Friday", "duration": "1.5h", "intensity": "Z2", 
+                     "description": f"Build endurance (noted your recent {metrics['distance']}km ride)"})
+    elif metrics["distance"] > 40:  # Recent ride was long
+        plan.append({"day_of_week": "Wednesday", "duration": "1h", "intensity": "Z1", 
+                     "description": f"Extra recovery (after your recent {metrics['distance']}km ride)"})
+
+    if metrics["heart_rate"] > 170:  # High effort recently
+        plan.append({"day_of_week": "Tuesday", "duration": "45m", "intensity": "Z1", 
+                     "description": f"Light recovery (your HR hit {metrics['heart_rate']} bpm)"})
+
     if "racing" in user_profile.goals.lower():
-        plan.append({"day_of_week": "Wednesday", "duration": "1h", "intensity": "Z5", "description": "VO2 max intervals"})
+        plan.append({"day_of_week": "Wednesday", "duration": "1h", "intensity": "Z5", 
+                     "description": f"VO2 max intervals (power noted at {metrics['power']}W)"})
 
     return plan

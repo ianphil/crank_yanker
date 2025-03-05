@@ -36,8 +36,7 @@ def create_profile():
         click.echo(f"Experience Level: {user_profile.experience_level}")
         click.echo(f"Goals: {user_profile.goals}")
 
-    # Strava integration stubs
-    authenticate()
+    # Fetch Strava metrics (stubbed or real)
     metrics = fetch_metrics()
     click.echo("Strava Metrics:")
     click.echo(f"Distance: {metrics['distance']} km")
@@ -47,14 +46,14 @@ def create_profile():
     # Prompt for FTP and generate workout plan
     ftp = click.prompt("Enter your FTP (Functional Threshold Power) in watts", type=int)
     zones = calculate_power_zones(ftp)
-    weekly_plan = generate_weekly_plan(user_profile, zones)
+    weekly_plan = generate_weekly_plan(user_profile, zones, metrics)
 
     # Display power zones
     click.echo("\nYour Power Zones:")
     for zone, (low, high) in zones.items():
         click.echo(f"{zone}: {low}-{high} watts")
 
-    # Display weekly plan
+    # Display weekly plan with Strava metric references
     click.echo("\nYour Weekly Training Plan:")
     for session in weekly_plan:
         click.echo(f"{session['day_of_week']}: {session['duration']} at {session['intensity']} - {session['description']}")
