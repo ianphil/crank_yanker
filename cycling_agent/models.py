@@ -1,5 +1,11 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, field_validator
 
 class UserProfile(BaseModel):
-    experience_level: constr(min_length=1)  # Ensures string is not empty
-    goals: constr(min_length=1)
+    experience_level: str
+    goals: str
+
+    @field_validator("experience_level", "goals")
+    def check_not_empty(cls, v):
+        if not v:
+            raise ValueError("Field cannot be empty")
+        return v
